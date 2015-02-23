@@ -327,7 +327,8 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
                  invert_polarity=True,
                  enable_pwm=False,
                  pwm=PWM.get_platform_pwm(),
-                 initial_color=(1.0, 1.0, 1.0),
+                 initial_color=None,
+                 backlight=None,
                  **kwargs):
         """Initialize the LCD with RGB backlight.  RS, EN, and D4...D7 parameters 
         should be the pins connected to the LCD RS, clock enable, and data line 
@@ -354,7 +355,7 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
                                                   cols,
                                                   lines, 
                                                   enable_pwm=enable_pwm,
-                                                  backlight=None,
+                                                  backlight=backlight,
                                                   invert_polarity=invert_polarity,
                                                   gpio=gpio, 
                                                   pwm=pwm,
@@ -363,6 +364,10 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
         self._green = green
         self._blue = blue
         # Setup backlight pins.
+        if initial_color is None:
+            initial_color = (1.0, 1.0, 1.0) if backlight is None else (0,0,0)
+        if backlight is None:
+            self.set_backlight = self._set_backlight
         if enable_pwm:
             # Determine initial backlight duty cycles.
             rdc, gdc, bdc = self._rgb_to_duty_cycle(initial_color)
@@ -410,7 +415,7 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
                                     self._green: self._blpol if green else not self._blpol,
                                     self._blue:  self._blpol if blue else not self._blpol })
 
-    def set_backlight(self, backlight):
+    def _set_backlight(self, backlight):
         """Enable or disable the backlight.  If PWM is not enabled (default), a
         non-zero backlight value will turn on the backlight and a zero value will
         turn it off.  If PWM is enabled, backlight can be any value from 0.0 to
