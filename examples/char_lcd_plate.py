@@ -72,6 +72,7 @@ try:
 		    (LCD.LEFT,   'Left - Red'    , (1,0,0)) )
 
 	print 'Press Ctrl-C to quit.'
+	last_button = LCD.SELECT
 	while True:
 		# Loop through each button and check if it is pressed.
 		for button in buttons:
@@ -79,7 +80,17 @@ try:
 				# Button is pressed, change the message and backlight.
 				lcd.clear()
 				lcd.message(button[1])
-				lcd.set_color(button[2][0], button[2][1], button[2][2])
+				if last_button == button[0] and last_button == LCD.SELECT:
+					lcd.set_color(0,0,0)
+					last_button = None
+					lcd.message("\nColor off")
+				else:
+					lcd.set_color(button[2][0], button[2][1], button[2][2])
+					last_button = button[0]
+				# wait until the button is released
+				while lcd.is_pressed(button[0]):
+					time.sleep(0.1)
+				break
 except KeyboardInterrupt:
 	pass
 
