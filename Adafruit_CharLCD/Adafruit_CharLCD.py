@@ -445,9 +445,7 @@ class Adafruit_CharLCDPlate(Adafruit_RGBCharLCD):
 
     def is_pressed(self, button):
         """Return True if the provided button is pressed, False otherwise."""
-        if button not in set((SELECT, RIGHT, DOWN, UP, LEFT)):
-            raise ValueError('Unknown button, must be SELECT, RIGHT, DOWN, UP, or LEFT.')
-        return self._mcp.input(button) == GPIO.LOW
+        return self.read_buttons([button])[0]
 
     def read_buttons(self, buttons=None):
         """Return list of values for specified buttons, True if pressed, False otherwise."""
