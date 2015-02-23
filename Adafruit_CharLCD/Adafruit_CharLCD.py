@@ -78,6 +78,7 @@ LCD_PLATE_D7            = 9
 LCD_PLATE_RED           = 6
 LCD_PLATE_GREEN         = 7
 LCD_PLATE_BLUE          = 8
+LCD_PLATE_SPARE         = 5
 
 # Char LCD plate button names.
 SELECT                  = 0
@@ -326,7 +327,8 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
                  invert_polarity=True,
                  enable_pwm=False,
                  pwm=PWM.get_platform_pwm(),
-                 initial_color=(1.0, 1.0, 1.0)):
+                 initial_color=(1.0, 1.0, 1.0),
+                 **kwargs):
         """Initialize the LCD with RGB backlight.  RS, EN, and D4...D7 parameters 
         should be the pins connected to the LCD RS, clock enable, and data line 
         4 through 7 connections. The LCD will be used in its 4-bit mode so these 
@@ -355,7 +357,8 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
                                                   backlight=None,
                                                   invert_polarity=invert_polarity,
                                                   gpio=gpio, 
-                                                  pwm=pwm)
+                                                  pwm=pwm,
+                                                  **kwargs)
         self._red = red
         self._green = green
         self._blue = blue
@@ -422,7 +425,7 @@ class Adafruit_CharLCDPlate(Adafruit_RGBCharLCD):
     """Class to represent and interact with an Adafruit Raspberry Pi character
     LCD plate."""
 
-    def __init__(self, address=0x20, busnum=I2C.get_default_bus(), cols=16, lines=2):
+    def __init__(self, address=0x20, busnum=I2C.get_default_bus(), cols=16, lines=2, **kwargs):
         """Initialize the character LCD plate.  Can optionally specify a separate
         I2C address or bus number, but the defaults should suffice for most needs.
         Can also optionally specify the number of columns and lines on the LCD
@@ -441,7 +444,7 @@ class Adafruit_CharLCDPlate(Adafruit_RGBCharLCD):
         super(Adafruit_CharLCDPlate, self).__init__(LCD_PLATE_RS, LCD_PLATE_EN,
             LCD_PLATE_D4, LCD_PLATE_D5, LCD_PLATE_D6, LCD_PLATE_D7, cols, lines,
             LCD_PLATE_RED, LCD_PLATE_GREEN, LCD_PLATE_BLUE, enable_pwm=False, 
-            gpio=self._mcp)
+            gpio=self._mcp, **kwargs)
 
     def is_pressed(self, button):
         """Return True if the provided button is pressed, False otherwise."""
