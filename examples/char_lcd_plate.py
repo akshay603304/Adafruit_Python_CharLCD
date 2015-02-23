@@ -1,9 +1,13 @@
 #!/usr/bin/python
 # Example using a character LCD plate.
+import sys
 import time
 
 import Adafruit_CharLCD as LCD
 
+
+# Maybe fast thru colors to get to button test
+delay = 1 if 'fast' in sys.argv else 3
 
 # Initialize the LCD using the pins
 lcd = LCD.Adafruit_CharLCDPlate()
@@ -21,48 +25,48 @@ lcd.create_char(7, [31, 17, 21, 21, 21, 21, 17, 31])
 lcd.set_color(1.0, 0.0, 0.0)
 lcd.clear()
 lcd.message('RED \x01')
-time.sleep(3.0)
+time.sleep(delay)
 
 lcd.set_color(0.0, 1.0, 0.0)
 lcd.clear()
 lcd.message('GREEN \x02')
-time.sleep(3.0)
+time.sleep(delay)
 
 lcd.set_color(0.0, 0.0, 1.0)
 lcd.clear()
 lcd.message('BLUE \x03')
-time.sleep(3.0)
+time.sleep(delay)
 
 lcd.set_color(1.0, 1.0, 0.0)
 lcd.clear()
 lcd.message('YELLOW \x04')
-time.sleep(3.0)
+time.sleep(delay)
 
 lcd.set_color(0.0, 1.0, 1.0)
 lcd.clear()
 lcd.message('CYAN \x05')
-time.sleep(3.0)
+time.sleep(delay)
 
 lcd.set_color(1.0, 0.0, 1.0)
 lcd.clear()
 lcd.message('MAGENTA \x06')
-time.sleep(3.0)
+time.sleep(delay)
 
 lcd.set_color(1.0, 1.0, 1.0)
 lcd.clear()
 lcd.message('WHITE \x07')
-time.sleep(3.0)
+time.sleep(delay)
 
 # Show button state.
 lcd.clear()
 lcd.message('Press buttons...')
 
 # Make list of button value, text, and backlight color.
-buttons = ( (LCD.SELECT, 'Select', (1,1,1)),
-            (LCD.LEFT,   'Left'  , (1,0,0)),
-            (LCD.UP,     'Up'    , (0,0,1)),
-            (LCD.DOWN,   'Down'  , (0,1,0)),
-            (LCD.RIGHT,  'Right' , (1,0,1)) )
+buttons = ( (LCD.SELECT, 'Select - White', (1,1,1)),
+	    (LCD.RIGHT,  'Right - RB'    , (1,0,1)),
+	    (LCD.DOWN,   'Down - Green'  , (0,1,0)),
+	    (LCD.UP,     'Up - Blue'     , (0,0,1)),
+	    (LCD.LEFT,   'Left - Red'    , (1,0,0)) )
 
 print('Press Ctrl-C to quit.')
 while True:
