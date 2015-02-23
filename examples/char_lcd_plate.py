@@ -5,13 +5,16 @@ import time
 
 import Adafruit_CharLCD as LCD
 
+# if GREEN and BLUE are swapped
+#LCD.LCD_PLATE_GREEN = 7
+#LCD.LCD_PLATE_BLUE  = 8
 
 
 delay = 1 if 'fast' in sys.argv else 3
 
 
 # Initialize the LCD using the pins 
-lcd = LCD.Adafruit_CharLCDPlate()
+lcd = LCD.Adafruit_CharLCDPlate(backlight=LCD.LCD_PLATE_SPARE)
 
 try:
 
@@ -95,6 +98,7 @@ except KeyboardInterrupt:
 	pass
 
 lcd.set_color(0,0,0)
+lcd.set_backlight(0)
 lcd.clear()
 lcd.message('Goodbye.')
 print '\nGoodbye.\n\n'
