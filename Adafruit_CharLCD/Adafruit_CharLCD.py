@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
 import time
 
 import Adafruit_GPIO as GPIO
@@ -87,10 +88,13 @@ DOWN                    = 2
 UP                      = 3
 LEFT                    = 4
 
+
+
 class Adafruit_CharLCD(object):
     """Class to represent and interact with an HD44780 character LCD display."""
 
-    def __init__(self, rs, en, d4, d5, d6, d7, cols, lines, backlight=None,
+    def __init__(self, rs, en, d4, d5, d6, d7, cols=16, lines=2,
+                    backlight=None,
                     invert_polarity=True,
                     enable_pwm=False,
                     gpio=GPIO.get_platform_gpio(),
@@ -99,8 +103,8 @@ class Adafruit_CharLCD(object):
         """Initialize the LCD.  RS, EN, and D4...D7 parameters should be the pins
         connected to the LCD RS, clock enable, and data line 4 through 7 connections.
         The LCD will be used in its 4-bit mode so these 6 lines are the only ones
-        required to use the LCD.  You must also pass in the number of columns and
-        lines on the LCD.  
+        required to use the LCD.  You may also pass in the number of columns and
+        lines on the LCD (default is 16x2).
 
         If you would like to control the backlight, pass in the pin connected to
         the backlight with the backlight parameter.  The invert_polarity boolean
@@ -318,13 +322,14 @@ class Adafruit_CharLCD(object):
         return intensity
 
 
-class Adafruit_RGBCharLCD(Adafruit_CharLCD):
-    """Class to represent and interact with an HD44780 character LCD display with
-    an RGB backlight."""
 
-    def __init__(self, rs, en, d4, d5, d6, d7, cols, lines, red, green, blue,
+class Adafruit_RGBCharLCDex(Adafruit_CharLCD):
+    """Class to represent and interact with an HD44780 character LCD display with
+    an RGB backlight. Minimal args version."""
+
+
+    def __init__(self, rs, en, d4, d5, d6, d7, red, green, blue,
                  gpio=GPIO.get_platform_gpio(), 
-                 invert_polarity=True,
                  enable_pwm=False,
                  pwm=PWM.get_platform_pwm(),
                  initial_color=None,
@@ -333,8 +338,7 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
         """Initialize the LCD with RGB backlight.  RS, EN, and D4...D7 parameters 
         should be the pins connected to the LCD RS, clock enable, and data line 
         4 through 7 connections. The LCD will be used in its 4-bit mode so these 
-        6 lines are the only ones required to use the LCD.  You must also pass in
-        the number of columns and lines on the LCD.
+        6 lines are the only ones required to use the LCD.
 
         The red, green, and blue parameters define the pins which are connected
         to the appropriate backlight LEDs.  The invert_polarity parameter is a
@@ -351,15 +355,13 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
         pass in an GPIO instance, the default GPIO for the running platform will
         be used.
         """
-        super(Adafruit_RGBCharLCD, self).__init__(rs, en, d4, d5, d6, d7,
-                                                  cols,
-                                                  lines, 
-                                                  enable_pwm=enable_pwm,
-                                                  backlight=backlight,
-                                                  invert_polarity=invert_polarity,
-                                                  gpio=gpio, 
-                                                  pwm=pwm,
-                                                  **kwargs)
+        super(Adafruit_RGBCharLCDex, self).__init__(
+            rs, en, d4, d5, d6, d7,
+            gpio=gpio, 
+            enable_pwm=enable_pwm,
+            pwm=pwm,
+            backlight=backlight,
+            **kwargs)
         self._red = red
         self._green = green
         self._blue = blue
@@ -380,6 +382,7 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
             gpio.setup(blue, GPIO.OUT)
             self._gpio.output_pins(self._rgb_to_pins(initial_color))
 
+
     def _rgb_to_duty_cycle(self, rgb):
         # Convert tuple of RGB 0-1 values to tuple of duty cycles (0-100).
         red, green, blue = rgb
@@ -391,12 +394,14 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
                 self._pwm_duty_cycle(green),
                 self._pwm_duty_cycle(blue))
 
+
     def _rgb_to_pins(self, rgb):
         # Convert tuple of RGB 0-1 values to dict of pin values.
         red, green, blue = rgb
         return { self._red:   self._blpol if red else not self._blpol,
                  self._green: self._blpol if green else not self._blpol,
                  self._blue:  self._blpol if blue else not self._blpol }
+
 
     def set_color(self, red, green, blue):
         """Set backlight color to provided red, green, and blue values.  If PWM
@@ -415,6 +420,7 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
                                     self._green: self._blpol if green else not self._blpol,
                                     self._blue:  self._blpol if blue else not self._blpol })
 
+
     def _set_backlight(self, backlight):
         """Enable or disable the backlight.  If PWM is not enabled (default), a
         non-zero backlight value will turn on the backlight and a zero value will
@@ -425,16 +431,30 @@ class Adafruit_RGBCharLCD(Adafruit_CharLCD):
         self.set_color(backlight, backlight, backlight)
 
 
+class Adafruit_RGBCharLCD(Adafruit_RGBCharLCDex):
+    """Class to represent and interact with an HD44780 character LCD display with
+    an RGB backlight.  Backwards compatibility version.
+    The init requires the number of columns and lines on the LCD."""
 
-class Adafruit_CharLCDPlate(Adafruit_RGBCharLCD):
+    def __init__(self,
+                 rs, en, d4, d5, d6, d7, cols, lines,
+                 red, green, blue, **kwargs):
+        super(Adafruit_RGBCharLCD, self).__init__(
+                 rs, en, d4, d5, d6, d7,
+                 red, green, blue,
+                 cols=cols, lines=lines, **kwargs)
+
+
+
+class Adafruit_CharLCDPlate(Adafruit_RGBCharLCDex):
     """Class to represent and interact with an Adafruit Raspberry Pi character
     LCD plate."""
 
-    def __init__(self, address=0x20, busnum=I2C.get_default_bus(), cols=16, lines=2, **kwargs):
+
+    def __init__(self, address=0x20, busnum=I2C.get_default_bus(), **kwargs):
         """Initialize the character LCD plate.  Can optionally specify a separate
         I2C address or bus number, but the defaults should suffice for most needs.
-        Can also optionally specify the number of columns and lines on the LCD
-        (default is 16x2).
+        Can optionally specify args for the parent LCD classes, e.g. cols, lines.
         """
         # Configure MCP23017 device.
         self._mcp = MCP.MCP23017(address=address, busnum=busnum)
@@ -446,18 +466,21 @@ class Adafruit_CharLCDPlate(Adafruit_RGBCharLCD):
             self._mcp.setup(button, GPIO.IN)
             self._mcp.pullup(button, True)
         # Initialize LCD (with no PWM support).
-        super(Adafruit_CharLCDPlate, self).__init__(LCD_PLATE_RS, LCD_PLATE_EN,
-            LCD_PLATE_D4, LCD_PLATE_D5, LCD_PLATE_D6, LCD_PLATE_D7, cols, lines,
-            LCD_PLATE_RED, LCD_PLATE_GREEN, LCD_PLATE_BLUE, enable_pwm=False, 
+        super(Adafruit_CharLCDPlate, self).__init__(
+            LCD_PLATE_RS, LCD_PLATE_EN,
+            LCD_PLATE_D4, LCD_PLATE_D5, LCD_PLATE_D6, LCD_PLATE_D7,
+            LCD_PLATE_RED, LCD_PLATE_GREEN, LCD_PLATE_BLUE,
             gpio=self._mcp, **kwargs)
+
 
     def is_pressed(self, button):
         """Return True if the provided button is pressed, False otherwise."""
         #return self.read_buttons([button])[0]
-    #until input_pins is known good:
+    #until input_pins is known good we need the old version:
         if button not in set((SELECT, RIGHT, DOWN, UP, LEFT)):
             raise ValueError('Unknown button, must be SELECT, RIGHT, DOWN, UP, or LEFT.')
         return self._mcp.input(button) == GPIO.LOW
+
 
     def read_buttons(self, buttons=(SELECT, RIGHT, DOWN, UP, LEFT)):
         """Return list of values for specified buttons, True if pressed, False otherwise."""
