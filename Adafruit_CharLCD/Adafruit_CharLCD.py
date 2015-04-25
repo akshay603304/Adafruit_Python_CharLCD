@@ -93,32 +93,32 @@ LEFT                    = 4
 class Adafruit_CharLCD(object):
     """Class to represent and interact with an HD44780 character LCD display."""
 
-    def __init__(self, rs, en, d4, d5, d6, d7, cols=16, lines=2,
+    def __init__(self, rs, en, d4, d5, d6, d7, cols=16, rows=2,
                     backlight=None,
                     invert_polarity=True,
                     enable_pwm=False,
                     gpio=GPIO.get_platform_gpio(),
                     pwm=PWM.get_platform_pwm(),
-                    initial_backlight=1.0):
+                    lines=None, initial_backlight=1.0):
         """Initialize the LCD.  RS, EN, and D4...D7 parameters should be the pins
         connected to the LCD RS, clock enable, and data line 4 through 7 connections.
         The LCD will be used in its 4-bit mode so these 6 lines are the only ones
         required to use the LCD.  You may also pass in the number of columns and
-        lines on the LCD (default is 16x2).
+        rows on the LCD (default is 16x2).
 
         If you would like to control the backlight, pass in the pin connected to
         the backlight with the backlight parameter.  The invert_polarity boolean
-        controls if the backlight is one with a LOW signal or HIGH signal.  The 
+        controls if the backlight is on with a LOW signal or HIGH signal.  The
         default invert_polarity value is True, i.e. the backlight is on with a
-        LOW signal.  
+        LOW signal.
 
-        You can enable PWM of the backlight pin to have finer control on the 
-        brightness.  To enable PWM make sure your hardware supports PWM on the 
+        You can enable PWM of the backlight pin to have finer control on the
+        brightness.  To enable PWM make sure your hardware supports PWM on the
         provided backlight pin and set enable_pwm to True (the default is False).
         The appropriate PWM library will be used depending on the platform, but
         you can provide an explicit one with the pwm parameter.
 
-        The initial state of the backlight is ON, but you can set it to an 
+        The initial state of the backlight is ON, but you can set it to an
         explicit initial state with the initial_backlight parameter (0 is off,
         1 is on/full bright).
 
@@ -127,9 +127,9 @@ class Adafruit_CharLCD(object):
         pass in an GPIO instance, the default GPIO for the running platform will
         be used.
         """
-        # Save column and line state.
-        self._cols = cols
-        self._lines = lines
+        # Save column and row (line) count.
+        self.cols = cols
+        self.rows = lines or rows
         # Save GPIO state and pin numbers.
         self._gpio = gpio
         self._rs = rs
@@ -140,19 +140,19 @@ class Adafruit_CharLCD(object):
         self._d7 = d7
         # Save backlight state.
         self._backlight = backlight
+        self._blpol = not invert_polarity
         self._pwm_enabled = enable_pwm
         self._pwm = pwm
-        self._blpol = not invert_polarity
-        # Setup all pins as outputs.
-        for pin in (rs, en, d4, d5, d6, d7):
-            gpio.setup(pin, GPIO.OUT)
         # Setup backlight.
         if backlight is not None:
             if enable_pwm:
                 pwm.start(backlight, self._pwm_duty_cycle(initial_backlight))
             else:
                 gpio.setup(backlight, GPIO.OUT)
-                gpio.output(backlight, self._blpol if initial_backlight else not self._blpol)
+            self.set_backlight(initial_backlight)
+        # Setup all pins as outputs.
+        for pin in (rs, en, d4, d5, d6, d7):
+            gpio.setup(pin, GPIO.OUT)
         # Initialize the display.
         self.write8(0x33)
         self.write8(0x32)
@@ -179,8 +179,8 @@ class Adafruit_CharLCD(object):
     def set_cursor(self, col, row):
         """Move the cursor to an explicit column and row position."""
         # Clamp row to the last row of the display.
-        if row > self._lines:
-            row = self._lines - 1
+        if row > self.rows:
+            row = self.rows - 1
         # Set location.
         self.write8(LCD_SETDDRAMADDR | (col + LCD_ROW_OFFSETS[row]))
 
@@ -245,7 +245,7 @@ class Adafruit_CharLCD(object):
             if char == '\n':
                 line += 1
                 # Move to left or right side depending on text direction.
-                col = 0 if self.displaymode & LCD_ENTRYLEFT > 0 else self._cols-1
+                col = 0 if self.displaymode & LCD_ENTRYLEFT > 0 else self.cols-1
                 self.set_cursor(col, line)
             # Write the character to the display.
             else:
@@ -273,16 +273,16 @@ class Adafruit_CharLCD(object):
         # Set character / data bit.
         self._gpio.output(self._rs, char_mode)
         # Write upper 4 bits.
-        self._gpio.output_pins({ self._d4: ((value >> 4) & 1) > 0,
-                                 self._d5: ((value >> 5) & 1) > 0,
-                                 self._d6: ((value >> 6) & 1) > 0,
-                                 self._d7: ((value >> 7) & 1) > 0 })
+        self._gpio.output_pins({ self._d4: bool(value &  16),
+                                 self._d5: bool(value &  32),
+                                 self._d6: bool(value &  64),
+                                 self._d7: bool(value & 128) })
         self._pulse_enable()
         # Write lower 4 bits.
-        self._gpio.output_pins({ self._d4: (value        & 1) > 0,
-                                 self._d5: ((value >> 1) & 1) > 0,
-                                 self._d6: ((value >> 2) & 1) > 0,
-                                 self._d7: ((value >> 3) & 1) > 0 })
+        self._gpio.output_pins({ self._d4: bool(value & 1),
+                                 self._d5: bool(value & 2),
+                                 self._d6: bool(value & 4),
+                                 self._d7: bool(value & 8) })
         self._pulse_enable()
 
     def create_char(self, location, pattern):
