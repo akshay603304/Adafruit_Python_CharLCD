@@ -114,15 +114,27 @@ PINMAPS = [
 
 class PCF_CharLCD(ALCD.Adafruit_CharLCD):
 
-    def __init__(self, pinmap=0, gpio=None, address=None, busnum=None, i2c=None, **kwargs):
+    def __init__(self, pinmap=0, gpio=None, **kwargs):
         """
-        Expects 'pinmap' as an index to select one of the pre-defined pin maps or
-        as a dictionary defining a pin map similar to one of the pre-defined.
-        Also gpio as a PCF8574 (or compatible GPIO) instance,
-        or else specify address, busnum and i2c to create an instance.
+        Expects 'pinmap' as an index to select a pre-defined pin map or a
+        dictionary defining a pin map similar to one of the pre-defined.
+
+        Can specify gpio as a PCF8574 (or compatible GPIO) instance, or leave
+        it out to get the default instance, or else specify address, busnum
+        and/or i2c as needed to create a custom instance.
         """
         # get I2C GPIO expander instance
-        iox = IOX.PCF8574(address=address, busnum=busnum, i2c=i2c) if gpio is None else gpio
+        if gpio is None:
+                ioxargs = {}
+                for kw in ('address', 'busnum', 'i2c'):
+                        try:
+                                ioxargs[kw] = kwargs[kw]
+                                del kwargs[kw]
+                        except KeyError:
+                                pass
+                iox = IOX.PCF8574(**ioxargs)
+        else:
+                iox = gpio
         self._storepinmap(pinmap)
         # Set LCD R/W pin to low - only writing to lcd
         iox.setup(PCF_RW, IOX.OUT)
